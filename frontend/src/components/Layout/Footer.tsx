@@ -3,32 +3,32 @@ import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-100 py-8 mt-auto">
+    <footer className="bg-cursor-darker py-8 mt-auto border-t border-cursor-border">
       <div className="container mx-auto px-4 text-center">
-        <p className="text-gray-600 mb-2">
-          &copy; {new Date().getFullYear()} Cursor Change Alerter
+        <p className="text-cursor-light mb-2">
+          &copy; {new Date().getFullYear()} Cursor Changelog
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-cursor-muted">
           Stay updated with the latest Cursor editor releases
         </p>
-        <p className="text-sm text-gray-500 mt-1">
-          Built with ❤️ and <a href="https://cursor.sh" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">Cursor</a>
+        <p className="text-sm text-cursor-muted mt-1">
+          Built with ❤️ and <a href="https://cursor.com" target="_blank" rel="noopener noreferrer" className="text-primary-400 hover:underline">Cursor</a>
         </p>
-        <p className="text-xs text-gray-400 mt-2">
-          <strong>Not affiliated with Cursor.</strong> <Link to="/about" className="underline hover:text-primary-600">Read our disclaimer</Link>
+        <p className="text-xs text-cursor-muted mt-2">
+          <strong>Not affiliated with Cursor.</strong> <Link to="/about" className="underline hover:text-primary-400">Read our disclaimer</Link>
         </p>
         <div className="mt-4 flex justify-center space-x-4">
           <a 
-            href="https://github.com/cursor-changeloger/cursor-change-alerter" 
+            href="https://github.com/olipayne/cursor-changelog" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-gray-500 hover:text-primary-600 transition-colors"
+            className="text-cursor-muted hover:text-primary-400 transition-colors text-sm"
           >
-            GitHub Repo
+            GitHub
           </a>
           <Link 
             to="/about" 
-            className="text-gray-500 hover:text-primary-600 transition-colors"
+            className="text-cursor-muted hover:text-primary-400 transition-colors text-sm"
           >
             About
           </Link>
@@ -36,7 +36,7 @@ const Footer: React.FC = () => {
             href="https://www.cursor.com/" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-gray-500 hover:text-primary-600 transition-colors"
+            className="text-cursor-muted hover:text-primary-400 transition-colors text-sm"
           >
             Cursor Editor
           </a>

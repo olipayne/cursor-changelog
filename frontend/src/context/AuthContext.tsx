@@ -14,7 +14,6 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string) => Promise<void>;
   register: (email: string, name?: string) => Promise<void>;
   logout: () => void;
   loginWithGoogle: () => void;
@@ -26,7 +25,6 @@ export const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  login: async () => {},
   register: async () => {},
   logout: () => {},
   loginWithGoogle: () => {},
@@ -42,80 +40,90 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { loginWithRedirect, logout: auth0Logout, user: auth0User, isAuthenticated: isAuth0Authenticated, isLoading: isAuth0Loading } = useAuth0();
+  const { 
+    loginWithRedirect, 
+    logout: auth0Logout, 
+    user: auth0User, 
+    isAuthenticated: isAuth0Authenticated, 
+    isLoading: isAuth0Loading, 
+    getAccessTokenSilently 
+  } = useAuth0();
 
-  // Check for token and user data on component mount
+  // Check for auth state and sync with backend
   useEffect(() => {
-    const checkAuth = async () => {
+    const syncAuthState = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const userData = localStorage.getItem('user');
-        
-        if (token && userData) {
-          setUser(JSON.parse(userData));
-        } else if (isAuth0Authenticated && auth0User) {
-          // If authenticated with Auth0, sync with our backend
+        // If authenticated with Auth0
+        if (isAuth0Authenticated && auth0User) {
           const email = auth0User.email || '';
           const name = auth0User.name || '';
           
           try {
-            // Try to login first, if user exists
-            const response = await ApiService.auth.login(email);
-            const { token, user } = response.data.data;
+            // Get token from Auth0
+            const auth0Token = await getAccessTokenSilently();
             
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            setUser(user);
-          } catch (err) {
-            // If login fails, register the user
-            const response = await ApiService.auth.register(email, name);
-            const { token, user } = response.data.data;
-            
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            setUser(user);
+            // Try to login or register with our backend to get our custom token
+            try {
+              // First try to login
+              const response = await ApiService.auth.login(email);
+              const backendToken = response.data.data.token;
+              const userData = response.data.data.user;
+              
+              // Store both tokens - backend token for API requests, Auth0 token for authentication state
+              localStorage.setItem('token', backendToken);
+              localStorage.setItem('auth0Token', auth0Token);
+              localStorage.setItem('user', JSON.stringify(userData));
+              setUser(userData);
+            } catch (err) {
+              // If login fails, register the user
+              const response = await ApiService.auth.register(email, name);
+              const backendToken = response.data.data.token;
+              const userData = response.data.data.user;
+              
+              localStorage.setItem('token', backendToken);
+              localStorage.setItem('auth0Token', auth0Token);
+              localStorage.setItem('user', JSON.stringify(userData));
+              setUser(userData);
+            }
+          } catch (error) {
+            console.error('Failed to get token from Auth0:', error);
+          }
+        } else {
+          // Check for token in local storage (for existing sessions)
+          const token = localStorage.getItem('token');
+          const userData = localStorage.getItem('user');
+          
+          if (token && userData) {
+            setUser(JSON.parse(userData));
           }
         }
       } catch (error) {
         console.error('Authentication error:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('auth0Token');
+        localStorage.removeItem('user');
       } finally {
         setIsLoading(false);
       }
     };
 
     if (!isAuth0Loading) {
-      checkAuth();
+      syncAuthState();
     }
-  }, [auth0User, isAuth0Authenticated, isAuth0Loading]);
+  }, [auth0User, isAuth0Authenticated, isAuth0Loading, getAccessTokenSilently]);
 
-  // Login method with email
-  const login = async (email: string) => {
-    setIsLoading(true);
-    try {
-      const response = await ApiService.auth.login(email);
-      const { token, user } = response.data.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Register method
+  // Register method (only used for direct registrations without Auth0)
   const register = async (email: string, name?: string) => {
     setIsLoading(true);
     try {
-      const response = await ApiService.auth.register(email, name);
-      const { token, user } = response.data.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
+      // Use Auth0's universal login for signup
+      await loginWithRedirect({
+        authorizationParams: {
+          connection: 'Username-Password-Authentication',
+          screen_hint: 'signup',
+        }
+      });
+      // Auth0 will handle the authentication flow
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -127,13 +135,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Logout method
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('auth0Token');
     localStorage.removeItem('user');
     setUser(null);
     
-    // If using Auth0, also log out there
-    if (isAuth0Authenticated) {
-      auth0Logout({ logoutParams: { returnTo: window.location.origin } });
-    }
+    // Log out from Auth0
+    auth0Logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
   // Login with Google
@@ -159,7 +166,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isAuthenticated: !!user,
     isLoading,
-    login,
     register,
     logout,
     loginWithGoogle,

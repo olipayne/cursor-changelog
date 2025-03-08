@@ -2,39 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-    html {
-        @apply text-gray-900;
-        @apply antialiased;
-    }
-
-    body {
-        @apply bg-gray-50 min-h-screen;
-    }
+body {
+    background-color: theme('colors.cursor.dark');
+    color: theme('colors.cursor.light');
+    min-height: 100vh;
 }
 
-@layer components {
-    .btn {
-        @apply px-4 py-2 rounded font-medium transition-colors;
-    }
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition-property: color, background-color, border-color;
+    transition-duration: 150ms;
+}
 
-    .btn-primary {
-        @apply bg-primary-600 text-white;
-    }
+.btn-primary {
+    background-color: theme('colors.primary.600');
+    color: theme('colors.cursor.light');
+}
 
-    .btn-outline {
-        @apply border border-primary-600 text-primary-600;
-    }
+.btn-outline {
+    border: 1px solid theme('colors.primary.600');
+    color: theme('colors.primary.600');
+}
 
-    .card {
-        @apply bg-white rounded-lg shadow-md p-6;
-    }
+.card {
+    background-color: theme('colors.cursor.darker');
+    border-radius: 0.375rem;
+    border: 1px solid theme('colors.cursor.border');
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+}
 
-    .input {
-        @apply w-full px-3 py-2 border rounded-md outline-none;
-    }
+.input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background-color: theme('colors.cursor.dark');
+    border: 1px solid theme('colors.cursor.border');
+    border-radius: 0.375rem;
+    outline: none;
+    color: theme('colors.cursor.light');
+}
 
-    .label {
-        @apply block text-sm font-medium text-gray-700 mb-1;
-    }
+.input:focus {
+    border-color: theme('colors.primary.500');
+    box-shadow: 0 0 0 1px theme('colors.primary.500');
+}
+
+.label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: theme('colors.cursor.light');
+    margin-bottom: 0.25rem;
 }

@@ -1,209 +1,173 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Layout from '../components/Layout/Layout';
-import ApiService from '../services/api';
+import axiosInstance from '../utils/axios';
 import { useAuth } from '../hooks/useAuth';
-import { Helmet } from 'react-helmet-async';
+import Layout from '../components/Layout/Layout';
+import { FiAlertTriangle, FiCheck, FiDownload, FiArrowRight } from 'react-icons/fi';
+import Spinner from '../components/common/Spinner';
 
-interface VersionData {
+// Update interface to match the actual API response
+interface Version {
   id: number;
   version: string;
   detected_at: string;
 }
 
+interface ApiResponse {
+  success: boolean;
+  data: Version;
+  error?: string;
+}
+
 const HomePage: React.FC = () => {
-  const [latestVersion, setLatestVersion] = useState<VersionData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [latestVersion, setLatestVersion] = useState<Version | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchLatestVersion = async () => {
+      setIsLoading(true);
       try {
-        const response = await ApiService.versions.getLatest();
+        const response = await axiosInstance.get<ApiResponse>('/api/versions/latest');
         if (response.data.success) {
           setLatestVersion(response.data.data);
+          setError(null);
         } else {
-          setError(response.data.error || 'Failed to fetch the latest version');
+          setError(response.data.error || 'Failed to fetch the latest Cursor version');
         }
       } catch (err) {
-        setError('An error occurred while fetching data');
-        console.error(err);
+        console.error('Error fetching latest release:', err);
+        setError('Failed to fetch the latest Cursor version. Please try again later.');
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchLatestVersion();
   }, []);
 
-  // Format relative time (e.g., "2 hours ago")
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    // Array of time period divisions
-    const divisions = [
-      { amount: 60 * 60 * 24 * 365, name: 'year', plural: 'years' },
-      { amount: 60 * 60 * 24 * 30, name: 'month', plural: 'months' },
-      { amount: 60 * 60 * 24 * 7, name: 'week', plural: 'weeks' },
-      { amount: 60 * 60 * 24, name: 'day', plural: 'days' },
-      { amount: 60 * 60, name: 'hour', plural: 'hours' },
-      { amount: 60, name: 'minute', plural: 'minutes' },
-      { amount: 1, name: 'second', plural: 'seconds' }
-    ];
-    
-    for (const division of divisions) {
-      if (seconds >= division.amount) {
-        const count = Math.floor(seconds / division.amount);
-        return `${count} ${count === 1 ? division.name : division.plural} ago`;
-      }
+  const formatDate = (dateString: string) => {
+    try {
+      const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+    } catch (err) {
+      console.error('Error formatting date:', err);
+      return 'Unknown date';
     }
-    
-    return 'just now';
+  };
+
+  // For now, we don't have release notes from the API
+  const renderPlaceholderNotes = () => {
+    return (
+      <p className="text-cursor-muted">
+        Visit the <a 
+          href={latestVersion ? `https://www.cursor.com/changelog#:~:text=${latestVersion.version}` : "https://www.cursor.com/changelog"} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-primary-400 hover:underline"
+        >
+          Cursor Changelog
+        </a> for detailed release notes.
+      </p>
+    );
   };
 
   return (
     <Layout>
-      <Helmet>
-        <title>Cursor Change Alerter - Stay Updated with the Latest Cursor Releases</title>
-        <meta name="description" content="Receive notifications when new versions of Cursor editor are released. Get updates via Email, Slack, Telegram, and more." />
-      </Helmet>
-      
-      <div className="max-w-5xl mx-auto">
-        {/* Hero Section */}
-        <section className="py-16 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            Cursor Change Alerter
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary-400 to-blue-400 text-transparent bg-clip-text">
+            Stay Updated with Cursor Editor
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Stay up-to-date with the latest Cursor editor releases through personalized notifications
+          <p className="text-xl text-cursor-muted max-w-2xl mx-auto">
+            Get notified when new versions of Cursor are released and never miss important updates or features.
           </p>
-          
-          <div className="mt-8">
-            {isAuthenticated ? (
-              <Link
-                to="/dashboard"
-                className="btn btn-primary px-8 py-3 rounded-md text-lg"
-              >
-                Go to Dashboard
-              </Link>
-            ) : (
-              <Link
-                to="/register"
-                className="btn btn-primary px-8 py-3 rounded-md text-lg"
-              >
-                Sign Up for Free
-              </Link>
-            )}
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Spinner size="lg" />
           </div>
-        </section>
-        
-        {/* Latest Version Section */}
-        <section className="py-12">
-          <div className="card bg-gradient-to-br from-blue-50 to-indigo-50 border border-indigo-100">
-            <h2 className="text-2xl font-bold mb-6 text-center">Latest Cursor Version</h2>
-            
-            <div className="py-4">
-              {loading ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-                </div>
-              ) : error ? (
-                <div className="text-red-500 text-center py-4">{error}</div>
-              ) : latestVersion ? (
-                <div className="text-center space-y-4">
-                  <div className="inline-block bg-primary-100 text-primary-800 text-3xl px-6 py-2 rounded-lg font-mono">
-                    v{latestVersion.version}
-                  </div>
-                  
-                  <div className="flex flex-col gap-1 items-center">
-                    <p className="text-gray-600">
-                      Detected {formatRelativeTime(latestVersion.detected_at)}
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      {new Date(latestVersion.detected_at).toLocaleDateString(undefined, {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <a 
-                      href="https://www.cursor.com/downloads" 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-primary inline-block"
-                    >
-                      Download Now
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-center text-gray-500 py-4">No version information available</p>
-              )}
+        ) : error ? (
+          <div className="card bg-cursor-darker p-6 rounded-lg border border-red-800 mb-8">
+            <div className="flex items-center text-red-400">
+              <FiAlertTriangle className="h-5 w-5 mr-2" />
+              <p>{error}</p>
             </div>
           </div>
-        </section>
-        
-        {/* Features Section */}
-        <section className="py-12">
-          <h2 className="text-2xl font-bold mb-8 text-center">Why Use Cursor Change Alerter?</h2>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="card hover:shadow-lg transition-shadow">
-              <h3 className="text-xl font-semibold mb-3">Stay Updated</h3>
-              <p className="text-gray-600">
-                Never miss a Cursor update again. Get notified as soon as new versions are released.
-              </p>
+        ) : latestVersion && (
+          <div className="card mb-12">
+            <div className="flex flex-col md:flex-row justify-between md:items-center mb-6">
+              <div>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300 mb-2">
+                  Latest Release
+                </span>
+                <h2 className="text-2xl font-bold">Cursor {latestVersion.version}</h2>
+                <p className="text-cursor-muted mt-1">Released on {formatDate(latestVersion.detected_at)}</p>
+              </div>
+              <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
+                <a 
+                  href="https://www.cursor.com/downloads" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-cursor-light rounded-md transition-colors"
+                >
+                  <FiDownload className="mr-2" />
+                  Download
+                </a>
+                <Link 
+                  to="/versions" 
+                  className="flex items-center justify-center px-4 py-2 border border-cursor-border hover:bg-cursor-dark text-cursor-light rounded-md transition-colors"
+                >
+                  View All Versions
+                </Link>
+              </div>
             </div>
             
-            <div className="card hover:shadow-lg transition-shadow">
-              <h3 className="text-xl font-semibold mb-3">Multiple Channels</h3>
-              <p className="text-gray-600">
-                Choose how you want to be notified: Email, Slack, Telegram, and more.
-              </p>
-            </div>
-            
-            <div className="card hover:shadow-lg transition-shadow">
-              <h3 className="text-xl font-semibold mb-3">Simple Setup</h3>
-              <p className="text-gray-600">
-                Easy to configure and manage. Set up once and forget about it.
-              </p>
+            <div>
+              <h3 className="font-medium text-primary-400 mb-2">What's New:</h3>
+              {renderPlaceholderNotes()}
             </div>
           </div>
-        </section>
-        
-        {/* Call to Action */}
-        <section className="py-12 text-center">
-          <div className="card bg-primary-50 border border-primary-100">
-            <h2 className="text-2xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-gray-600 mb-6">
-              Create an account and set up your notification preferences in minutes.
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <div className="card flex flex-col h-full">
+            <h2 className="text-xl font-bold mb-3">Get Notified</h2>
+            <p className="text-cursor-muted mb-6 flex-grow">
+              Receive notifications when new versions of Cursor are released and stay ahead with the latest features and improvements.
             </p>
-            
             {isAuthenticated ? (
-              <Link
-                to="/dashboard"
-                className="btn btn-primary"
+              <Link 
+                to="/dashboard" 
+                className="flex items-center text-primary-400 hover:text-primary-300 transition-colors"
               >
-                Go to Your Dashboard
+                Go to dashboard <FiArrowRight className="ml-1" />
               </Link>
             ) : (
-              <Link
-                to="/register"
-                className="btn btn-primary"
+              <Link 
+                to="/register" 
+                className="flex items-center text-primary-400 hover:text-primary-300 transition-colors"
               >
-                Sign Up Now
+                Sign up now <FiArrowRight className="ml-1" />
               </Link>
             )}
           </div>
-        </section>
+          
+          <div className="card flex flex-col h-full">
+            <h2 className="text-xl font-bold mb-3">Browse All Versions</h2>
+            <p className="text-cursor-muted mb-6 flex-grow">
+              View the complete history of Cursor releases, including release dates and version numbers for all detected updates.
+            </p>
+            <Link 
+              to="/versions" 
+              className="flex items-center text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              View version history <FiArrowRight className="ml-1" />
+            </Link>
+          </div>
+        </div>
       </div>
     </Layout>
   );

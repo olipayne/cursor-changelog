@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import { useAuth } from '../hooks/useAuth';
 import ApiService from '../services/api';
+import { FiAlertCircle, FiCheck, FiActivity } from 'react-icons/fi';
+import Spinner from '../components/common/Spinner';
 
 interface NotificationChannel {
   id: number;
@@ -205,7 +207,7 @@ const DashboardPage: React.FC = () => {
     return (
       <Layout>
         <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+          <Spinner size="lg" />
         </div>
       </Layout>
     );
@@ -214,74 +216,77 @@ const DashboardPage: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Notification Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-8 bg-gradient-to-r from-primary-400 to-blue-400 text-transparent bg-clip-text">Notification Dashboard</h1>
         
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert">
-            <span className="block">{error}</span>
+          <div className="bg-red-950 border border-red-800 text-red-300 px-4 py-3 rounded-md mb-6 flex items-center" role="alert">
+            <FiAlertCircle className="mr-2" />
+            <span>{error}</span>
           </div>
         )}
         
         <div className="grid gap-8 md:grid-cols-1">
           {/* Current Notification Channels */}
           <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Your Notification Channels</h2>
+            <h2 className="text-xl font-semibold mb-4 text-primary-400">Your Notification Channels</h2>
             
             {isLoadingData ? (
               <div className="flex justify-center py-10">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600"></div>
+                <Spinner size="md" />
               </div>
             ) : preferences.length === 0 ? (
-              <p className="text-gray-500 py-4">You haven't set up any notification channels yet.</p>
+              <p className="text-cursor-muted py-4">You haven't set up any notification channels yet.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
-                    <tr className="bg-gray-50 border-b">
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" colSpan={2}>Actions</th>
+                    <tr className="bg-cursor-darker border-b border-cursor-border">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-cursor-muted uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-cursor-muted uppercase tracking-wider">Details</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-cursor-muted uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-cursor-muted uppercase tracking-wider" colSpan={2}>Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-cursor-border">
                     {preferences.map(preference => (
                       <tr key={preference.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-900 text-primary-300">
                             {getChannelName(preference.channel_id)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-cursor-light">
                           {getConfigDisplay(preference)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             onClick={() => handleTogglePreference(preference.id, preference.is_active)}
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${preference.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${preference.is_active ? 'bg-green-900 text-green-300' : 'bg-cursor-darker text-cursor-muted'}`}
                           >
-                            {preference.is_active ? 'Active' : 'Inactive'}
+                            {preference.is_active ? (
+                              <>
+                                <FiCheck className="mr-1" />
+                                Active
+                              </>
+                            ) : 'Inactive'}
                           </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             onClick={() => handleTestNotification(preference.id)}
                             disabled={isTestingChannel === preference.id || !preference.is_active}
-                            className={`text-blue-600 hover:text-blue-900 mr-4 ${(isTestingChannel === preference.id || !preference.is_active) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`text-primary-400 hover:text-primary-300 transition-colors mr-4 ${(isTestingChannel === preference.id || !preference.is_active) ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {isTestingChannel === preference.id ? (
                               <span className="flex items-center">
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
+                                <Spinner size="sm" className="mr-2" />
                                 Testing...
                               </span>
                             ) : 'Test'}
                           </button>
                           <button
                             onClick={() => handleDeletePreference(preference.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-400 hover:text-red-300 transition-colors"
                           >
                             Delete
                           </button>
@@ -296,7 +301,7 @@ const DashboardPage: React.FC = () => {
           
           {/* Add New Notification Channel */}
           <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Add Notification Channel</h2>
+            <h2 className="text-xl font-semibold mb-4 text-primary-400">Add Notification Channel</h2>
             
             <form onSubmit={handleAddPreference} className="space-y-4">
               <div>
@@ -331,7 +336,7 @@ const DashboardPage: React.FC = () => {
                         className="input"
                         required
                       />
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-cursor-muted mt-1">
                         Create a webhook URL in your Slack workspace settings
                       </p>
                     </div>
@@ -339,16 +344,14 @@ const DashboardPage: React.FC = () => {
                   
                   {getChannelName(Number(newChannelId)).toLowerCase() === 'telegram' && (
                     <>
-                      <div className="border-l-4 border-yellow-500 bg-yellow-50 p-4 mb-4">
+                      <div className="border-l-4 border-yellow-500 bg-yellow-950/30 p-4 mb-4 rounded-r-md">
                         <div className="flex">
                           <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
+                            <FiAlertCircle className="h-5 w-5 text-yellow-400" />
                           </div>
                           <div className="ml-3">
-                            <h3 className="text-sm font-medium text-yellow-800">Important Setup Step</h3>
-                            <div className="mt-2 text-sm text-yellow-700">
+                            <h3 className="text-sm font-medium text-yellow-400">Important Setup Step</h3>
+                            <div className="mt-2 text-sm text-yellow-300">
                               <p><strong>You MUST start a conversation with your bot before it can send you messages!</strong></p>
                               <p className="mt-1">After creating your bot with BotFather, search for your bot's username in Telegram and send it a message (like "hello"). This step is required for the bot to be able to message you.</p>
                             </div>
@@ -367,7 +370,7 @@ const DashboardPage: React.FC = () => {
                           className="input"
                           required
                         />
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-cursor-muted mt-1">
                           To get your Chat ID: 
                           <ol className="list-decimal ml-5 mt-1">
                             <li>Start a chat with @userinfobot on Telegram</li>
@@ -386,7 +389,7 @@ const DashboardPage: React.FC = () => {
                           className="input"
                           required
                         />
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-cursor-muted mt-1">
                           To create a bot and get a token:
                           <ol className="list-decimal ml-5 mt-1">
                             <li>Start a chat with @BotFather on Telegram</li>
@@ -402,15 +405,12 @@ const DashboardPage: React.FC = () => {
                   <div>
                     <button 
                       type="submit" 
-                      className="btn btn-primary w-full flex justify-center items-center"
+                      className="btn bg-primary-600 hover:bg-primary-700 text-cursor-light w-full flex justify-center items-center py-2 px-4 rounded-md transition-colors"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
                         <>
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
+                          <Spinner size="sm" className="mr-2" />
                           Adding...
                         </>
                       ) : (
