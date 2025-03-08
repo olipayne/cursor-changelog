@@ -9,6 +9,7 @@ import RegisterPage from './pages/RegisterPage';
 import VersionsPage from './pages/VersionsPage';
 import DashboardPage from './pages/DashboardPage';
 import AboutPage from './pages/AboutPage';
+import RssFeed from './pages/RssFeed';
 
 function App() {
   return (
@@ -32,6 +33,12 @@ function App() {
             <Route path="/versions" element={<VersionsPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/about" element={<AboutPage />} />
+            
+            {/* RSS Feed Routes */}
+            <Route path="/feed" element={<RssFeed />} />
+            <Route path="/feed.xml" element={<RssFeed />} />
+            <Route path="/rss" element={<RssFeed />} />
+            <Route path="/rss.xml" element={<RssFeed />} />
           </Routes>
         </Router>
       </AuthProvider>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FiRss, FiExternalLink } from 'react-icons/fi';
 
 const Footer: React.FC = () => {
   return (
@@ -24,8 +25,15 @@ const Footer: React.FC = () => {
             rel="noopener noreferrer"
             className="text-cursor-muted hover:text-primary-400 transition-colors text-sm"
           >
-            GitHub
+            GitHub Repo
           </a>
+          <Link 
+            to="/feed" 
+            className="text-cursor-muted hover:text-primary-400 transition-colors text-sm flex items-center"
+          >
+            <FiRss className="mr-1" size={14} />
+            RSS Feed
+          </Link>
           <Link 
             to="/about" 
             className="text-cursor-muted hover:text-primary-400 transition-colors text-sm"

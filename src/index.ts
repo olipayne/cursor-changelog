@@ -33,12 +33,27 @@ app.route('/api/versions', versionRouter);
 app.route('/api/notifications', notificationRouter);
 app.route('/api/admin', adminRouter);
 
+// Add RSS feed redirects
+app.get('/feed', (c) => c.redirect('/api/versions/rss'));
+app.get('/feed.xml', (c) => c.redirect('/api/versions/rss'));
+app.get('/rss', (c) => c.redirect('/api/versions/rss'));
+app.get('/rss.xml', (c) => c.redirect('/api/versions/rss'));
+
 // Add a simple home route
 app.get('/', (c) => {
 	return c.json({
-		name: 'Cursor Change Alerter API',
+		name: 'Cursor Changelog API',
 		version: '0.1.0',
-		description: 'Track and get notified about Cursor editor updates'
+		description: 'Track and get notified about Cursor editor updates',
+		rss_feed: '/feed',
+		documentation: {
+			description: 'API endpoints for tracking Cursor versions',
+			endpoints: [
+				{ path: '/api/versions/latest', description: 'Get the latest Cursor version' },
+				{ path: '/api/versions/history', description: 'Get version history with pagination' },
+				{ path: '/feed', description: 'RSS feed of Cursor version updates' }
+			]
+		}
 	});
 });
 
