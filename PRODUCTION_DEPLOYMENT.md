@@ -8,7 +8,7 @@ This document outlines the steps for deploying the Cursor Change Alerter applica
 
 ```bash
 # Navigate to the project root
-cd little-darkness-cb5e
+cd cursor-changelog
 
 # Deploy to Cloudflare Workers
 npx wrangler deploy

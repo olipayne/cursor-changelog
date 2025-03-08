@@ -65,7 +65,11 @@ export class NotificationModel {
     .bind(userId)
     .all<UserNotificationPreference>();
     
-    return result.results;
+    // Convert SQLite's integer 0/1 to boolean for is_active field
+    return result.results.map(pref => ({
+      ...pref,
+      is_active: Boolean(pref.is_active)
+    }));
   }
 
   // Update user notification preference

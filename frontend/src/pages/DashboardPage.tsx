@@ -124,7 +124,7 @@ const DashboardPage: React.FC = () => {
   const handleTogglePreference = async (id: number, isActive: boolean) => {
     try {
       const response = await ApiService.notifications.updatePreference(id, {
-        is_active: !isActive
+        isActive: !isActive
       });
       
       if (response.data.success) {
