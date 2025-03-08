@@ -1,6 +1,6 @@
 {
-	"name": "little-darkness-cb5e",
-	"version": "0.0.0",
+	"name": "cursor-change-alerter",
+	"version": "0.1.0",
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
@@ -15,5 +15,11 @@
 		"typescript": "^5.5.2",
 		"vitest": "~3.0.7",
 		"wrangler": "^3.114.0"
+	},
+	"dependencies": {
+		"hono": "^3.11.11",
+		"@hono/zod-validator": "^0.1.11",
+		"zod": "^3.22.4",
+		"@tsndr/cloudflare-worker-jwt": "^2.2.7"
 	}
 }

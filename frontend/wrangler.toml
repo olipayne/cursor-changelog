@@ -1,0 +1,21 @@
+[site]
+bucket = "./dist"
+
+[site.dev]
+# Development command
+command = "npm run dev"
+
+[env.production]
+route = "cursor-changelog.com/*"
+zone_id = ""  # You'll need to add your Cloudflare zone ID
+
+# Custom domain setup
+[[routes]]
+pattern = "cursor-changelog.com"
+custom_domain = true
+
+# Handle all routes by returning the index.html for SPA
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200 

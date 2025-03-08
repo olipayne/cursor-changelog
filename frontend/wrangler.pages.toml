@@ -1,0 +1,25 @@
+# Cloudflare Pages configuration file
+name = "cursor-changelog-pages"
+compatibility_date = "2025-03-03"
+
+# Build configuration
+[build]
+command = "npm run build"
+output_dir = "dist"
+
+# Production branch
+[env.production]
+branch = "main"
+
+# Custom domain configuration
+routes = [
+  { pattern = "cursor-changelog.com", custom_domain = true }
+]
+
+# Environment variables - these will be populated from the Cloudflare Dashboard
+
+# SPA routing
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200 

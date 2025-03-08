@@ -11,8 +11,75 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { authRouter } from './api/auth';
+import { versionRouter } from './api/version';
+import { notificationRouter } from './api/notification';
+import { adminRouter } from './api/admin';
+import { VersionCheckerService } from './services/versionChecker';
+import { NotifierService } from './services/notifier';
+import { Env } from './types';
+
+// Create the main application
+const app = new Hono();
+
+// Add CORS middleware
+app.use('*', cors());
+
+// Add API routes
+app.route('/api/auth', authRouter);
+app.route('/api/versions', versionRouter);
+app.route('/api/notifications', notificationRouter);
+app.route('/api/admin', adminRouter);
+
+// Add a simple home route
+app.get('/', (c) => {
+	return c.json({
+		name: 'Cursor Change Alerter API',
+		version: '0.1.0',
+		description: 'Track and get notified about Cursor editor updates'
+	});
+});
+
+// Define the scheduled task to check for updates
+export interface Scheduled {
+	cron: string;
+	scheduled?: boolean;
+}
+
+// Export the fetch handler for HTTP requests
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+	// Handle HTTP requests
+	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		return app.fetch(request, env, ctx);
 	},
-} satisfies ExportedHandler<Env>;
+
+	// Handle scheduled events
+	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+		console.log('Running scheduled version check');
+		
+		try {
+			// Check for new versions
+			const versionChecker = new VersionCheckerService(env.DB);
+			const result = await versionChecker.checkForUpdates();
+			
+			console.log('Version check result:', result);
+			
+			// If a new version was found, notify users
+			if (result.isNewVersion && result.version) {
+				console.log(`New version detected: ${result.version}`);
+				
+				// Get the latest version from the database to get its ID
+				const notifier = new NotifierService(env.DB);
+				await notifier.notifyUsers(0); // The ID will be determined inside the notifier
+				
+				console.log('Notifications sent');
+			} else {
+				console.log('No new version detected');
+			}
+		} catch (error) {
+			console.error('Error in scheduled task:', error);
+		}
+	}
+};
