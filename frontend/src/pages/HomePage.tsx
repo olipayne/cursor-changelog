@@ -78,7 +78,7 @@ const HomePage: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary-400 to-blue-400 text-transparent bg-clip-text">
-            Stay Updated with Cursor Editor
+            Stay Updated with Cursor
           </h1>
           <p className="text-xl text-cursor-muted max-w-2xl mx-auto">
             Get notified when new versions of Cursor are released and never miss important updates or features.
